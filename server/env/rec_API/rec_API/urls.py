@@ -1,4 +1,4 @@
-"""seeasy_dj URL Configuration
+"""rec_API URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.9/topics/http/urls/
@@ -13,17 +13,20 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+
 from django.conf.urls import url, include
 from rest_framework import routers
-from rec import views
+from rec_app import views
+from django.contrib import admin
 
 router = routers.DefaultRouter()
+router.register(r'website', views.WebsiteViewSet)
+router.register(r'category', views.CategoryViewSet)
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 
-# Wire up our API using automatic URL routing.
-# Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    #url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^admin/', admin.site.urls),
 ]
