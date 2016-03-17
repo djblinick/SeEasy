@@ -1,0 +1,6 @@
+def url_cleaner(url, stemmer_type="WordNetLemmatizer"):
+        strip_list=['http', 'https', 'www', 'com', 'net', 'org', 'm', 'html', 'htm']
+        url_list=[x for x in word_tokenize(" ".join(re.findall(r'\w+', url,
+                flags = re.UNICODE | re.LOCALE)).lower()) if x not in strip_list
+                and not x.isdigit() and x not in stopwords.words('english')]
+        return " ".join(stemming(url_list, stemmer_type))
