@@ -1,0 +1,25 @@
+from rec_app.models import Category
+
+CATEGORIES_PATH = "../resources/clean_categories.txt"
+
+def load_data(path):
+    lines=[]
+    #opening file trainingData at path given
+    with open(path, 'r') as data:
+        #iterating over each line in trainingData
+        for line in data:
+            lines.append(line)
+    return lines
+
+
+def create_category(name):
+    c = Category(name=name)
+    c.save()
+
+def create_categories():
+    names = load_data(CATEGORIES_PATH)
+    for name in names:
+        create_category(name)
+
+
+create_categories()
