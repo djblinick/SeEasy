@@ -22,15 +22,19 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
   	}
 
 	var oppositeDirection = {"name" : lastUrlVisitedOnThisTab, "parent": changeInfo.url};
+	var newVisit = {"name" : changeInfo.url, "parent": lastUrlVisitedOnThisTab};
+
 	var arrayContainsOppositeDirection = false;
+	var sitePathAlreadyTravered = false;
 	allTrees[tabId].forEach(function (node) {
 		if (JSON.stringify(node) === JSON.stringify(oppositeDirection)) {
 			arrayContainsOppositeDirection = true;
+		} else if (JSON.stringify(node) === JSON.stringify(newVisit)) {
+			sitePathAlreadyTravered = true;
 		}
 	});
 
-	if (!arrayContainsOppositeDirection) {
-		var newVisit = {"name" : changeInfo.url, "parent": lastUrlVisitedOnThisTab};
+	if (!arrayContainsOppositeDirection && !sitePathAlreadyTravered) {
   		allTrees[tabId].push(newVisit);
 	}
 
