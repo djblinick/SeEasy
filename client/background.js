@@ -1,29 +1,55 @@
 // var nav = new NavigationCollector();
 
 
+var allTrees = [];
+var previousUrls = [];
+var activeTab = 0;
 
-// chrome.tabs.onCreated.addListener(function(tabId, changeInfo, tab) {         
-   
-// });
+chrome.tabs.onActiveChanged.addListener(function (tabId, selectInfo) {
+	activeTab = tabId;
+});
 
-// chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
-//   if (changeInfo.url) {
-  
-//   }
-// });
+  if (changeInfo.url) {
+	var lastUrlVisitedOnThisTab = previousUrls[tabId];
+
+	if (!lastUrlVisitedOnThisTab) {
+		lastUrlVisitedOnThisTab = "null";
+	}
+	if (!allTrees[tabId]) {
+  		allTrees[tabId] = [];
+  	}
+
+	var oppositeDirection = {"name" : lastUrlVisitedOnThisTab, "parent": changeInfo.url};
+	var arrayContainsOppositeDirection = false;
+	allTrees[tabId].forEach(function (node) {
+		if (JSON.stringify(node) === JSON.stringify(oppositeDirection)) {
+			arrayContainsOppositeDirection = true;
+		}
+	});
+
+	if (!arrayContainsOppositeDirection) {
+		var newVisit = {"name" : changeInfo.url, "parent": lastUrlVisitedOnThisTab};
+  		allTrees[tabId].push(newVisit);
+	}
+
+  	previousUrls[tabId] = changeInfo.url;
+  }
+});
 
 
 
 function onMessageListener_ (message, sender, sendResponse) {
 	if (message.type === 'getJSON') {
-	var data = [
+	/*var data = [
     { "name" : "Ynet.co.il", "parent":"Google.com" },
     { "name" : "Google.com", "parent":"null" },
     { "name" : "Walla.co.il", "parent":"Ynet.co.il" },
     { "name" : "Cnn.com", "parent":"Ynet.co.il" },
     { "name" : "Gmail.com", "parent":"Google.com" }
-    ];
+    ];*/
+      data = allTrees[activeTab];
 	  sendResponse({result:data})
 	}
 	else 
