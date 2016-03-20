@@ -14,20 +14,20 @@ def load_data(self,path):
     return lines
 
 
-class CatMan():
-    def create_entry(self,name):
-        c = Category(name=name)
-        c.save()
-
-    def create(self):
-        lines = load_data(CATEGORIES_PATH)
-        for line in lines:
-            self.create_entry(line)
-
-        print Website.objects.all()
-
-    def delete_all(self):
-        Category.objects.all().delete()
+# class CatMan():
+#     def create_entry(self,name):
+#         c = Category(name=name)
+#         c.save()
+#
+#     def create(self):
+#         lines = load_data(CATEGORIES_PATH)
+#         for line in lines:
+#             self.create_entry(line)
+#
+#         print Website.objects.all()
+#
+#     def delete_all(self):
+#         Category.objects.all().delete()
 
 class TSV():
     def create_web(self,url, body):
@@ -47,8 +47,8 @@ class TSV():
 
         lines = list(np.array(p.read_table(DATA_PATH)))
         for line in lines:
-            c=self.create_category(line[0])
-            w=self.create_web(line[1],line[2])
+            c=self.create_category(line[2])
+            w=self.create_web(line[0],line[1])
             if c:
                 c.websites.add(w)
                 w.categories.add(c)
