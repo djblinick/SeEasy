@@ -28,7 +28,5 @@ chrome.runtime.sendMessage(
 	});
 
     root = treeData[0];
-    root.x0 = height / 2;
-    root.y0 = 0;  
     update(root);
 });
