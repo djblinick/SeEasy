@@ -1,4 +1,0 @@
-import scipy
-import numpy
-
-

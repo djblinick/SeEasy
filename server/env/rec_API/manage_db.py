@@ -30,7 +30,7 @@ def clean_body(body):
     body = re.sub('^[0-9]+', '', body)
     stop = stopwords.words('english')
     body =' '.join([i for i in body.split() if i not in stop])
-    return body
+    return body.lower()
 
 # class CatMan():
 #     def create_entry(self,name):
