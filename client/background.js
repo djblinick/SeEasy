@@ -1,44 +1,60 @@
 // var nav = new NavigationCollector();
 
-
-var allTrees = [];
-var previousUrls = [];
 var activeTab = 0;
+var previousUrls;
+var allTrees;
 
 chrome.tabs.onActiveChanged.addListener(function (tabId, selectInfo) {
 	activeTab = tabId;
 });
 
+function addVisitToTree(tabId, changeInfo) {
+	if (allTrees && previousUrls) {
+		var lastUrlVisitedOnThisTab = previousUrls[tabId] || "null";
+		allTrees[tabId] = allTrees[tabId] || [];
+
+		var oppositeDirection = {"name" : lastUrlVisitedOnThisTab, "parent": changeInfo.url};
+		var newVisit = {"name" : changeInfo.url, "parent": lastUrlVisitedOnThisTab};
+
+		var arrayContainsOppositeDirection = false;
+		var sitePathAlreadyTraversed = false;
+		allTrees[tabId].forEach(function (node) {
+			if (JSON.stringify(node) === JSON.stringify(oppositeDirection)) {
+				arrayContainsOppositeDirection = true;
+			} else if (JSON.stringify(node) === JSON.stringify(newVisit)) {
+				sitePathAlreadyTraversed = true;
+			}
+		});
+
+		if (!arrayContainsOppositeDirection && !sitePathAlreadyTraversed) {
+	  		allTrees[tabId].push(newVisit);
+		}
+
+	  	previousUrls[tabId] = changeInfo.url;
+
+	  	chrome.storage.sync.set({'previousUrls': previousUrls}, function() {
+	          // Notify that we saved.
+	          console.log('previousUrls saved');
+	    });
+	    chrome.storage.sync.set({'allTrees': allTrees}, function() {
+	          // Notify that we saved.
+	          console.log('allTrees saved');
+	    });
+	}
+}
+
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
   if (changeInfo.url) {
-	var lastUrlVisitedOnThisTab = previousUrls[tabId];
-
-	if (!lastUrlVisitedOnThisTab) {
-		lastUrlVisitedOnThisTab = "null";
-	}
-	if (!allTrees[tabId]) {
-  		allTrees[tabId] = [];
+  	if (!allTrees && !previousUrls) {
+  		chrome.storage.sync.get({'allTrees': [],'previousUrls': []}, function (storage) {
+    		previousUrls = storage.previousUrls || [];
+    		allTrees = storage.allTrees || [];
+    		addVisitToTree(tabId, changeInfo);
+    	});
+  	} else {
+  		addVisitToTree(tabId, changeInfo);
   	}
-
-	var oppositeDirection = {"name" : lastUrlVisitedOnThisTab, "parent": changeInfo.url};
-	var newVisit = {"name" : changeInfo.url, "parent": lastUrlVisitedOnThisTab};
-
-	var arrayContainsOppositeDirection = false;
-	var sitePathAlreadyTravered = false;
-	allTrees[tabId].forEach(function (node) {
-		if (JSON.stringify(node) === JSON.stringify(oppositeDirection)) {
-			arrayContainsOppositeDirection = true;
-		} else if (JSON.stringify(node) === JSON.stringify(newVisit)) {
-			sitePathAlreadyTravered = true;
-		}
-	});
-
-	if (!arrayContainsOppositeDirection && !sitePathAlreadyTravered) {
-  		allTrees[tabId].push(newVisit);
-	}
-
-  	previousUrls[tabId] = changeInfo.url;
   }
 });
 
@@ -46,17 +62,15 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
 function onMessageListener_ (message, sender, sendResponse) {
 	if (message.type === 'getJSON') {
-	/*var data = [
-    { "name" : "Ynet.co.il", "parent":"Google.com" },
-    { "name" : "Google.com", "parent":"null" },
-    { "name" : "Walla.co.il", "parent":"Ynet.co.il" },
-    { "name" : "Cnn.com", "parent":"Ynet.co.il" },
-    { "name" : "Gmail.com", "parent":"Google.com" }
-    ];*/
-      data = allTrees[activeTab];
-	  sendResponse({result:data})
-	}
-	else 
+		if (!allTrees) {
+			chrome.storage.sync.get('allTrees', function (obj) {
+			    allTrees = obj || [];
+			    sendResponse({result:allTrees[activeTab]});
+			});
+		} else {
+			sendResponse({result:allTrees[activeTab]});
+		} 
+	} else 
 		sendResponse({});
 }
 
