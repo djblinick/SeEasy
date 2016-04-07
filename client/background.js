@@ -2,37 +2,41 @@
 
 var activeTab = 0;
 var previousUrls;
-var allTrees;
+var currentTabTree;
+var activeWindow;
 
 chrome.tabs.onActiveChanged.addListener(function (tabId, selectInfo) {
-	activeTab = tabId;
+	chrome.storage.sync.get({[activeWindow * tabId]: [],'previousUrls': {}}, function (storage) {
+		previousUrls = storage.previousUrls || {};
+		currentTabTree = storage[activeWindow * tabId] || [];
+		activeTab = tabId;
+	});
 });
 
 function addVisitToTree(tabId, changeInfo) {
-	if (allTrees && previousUrls) {
+	if (currentTabTree && previousUrls) {
 		var lastUrlVisitedOnThisTab = previousUrls[tabId] || "null";
-		allTrees[tabId] = allTrees[tabId] || [];
 
-		var oppositeDirection = {"name" : lastUrlVisitedOnThisTab, "parent": changeInfo.url};
 		var newVisit = {"name" : changeInfo.url, "parent": lastUrlVisitedOnThisTab};
+		var oppositeDirection = {"name" : lastUrlVisitedOnThisTab, "parent": changeInfo.url};
 
 		var arrayContainsOppositeDirection = false;
 		var sitePathAlreadyTraversed = false;
-		allTrees[tabId].forEach(function (node) {
-			if (JSON.stringify(node) === JSON.stringify(oppositeDirection)) {
+		currentTabTree.forEach(function (record) {
+			if (JSON.stringify(record) === JSON.stringify(oppositeDirection)) {
 				arrayContainsOppositeDirection = true;
-			} else if (JSON.stringify(node) === JSON.stringify(newVisit)) {
+			} else if (JSON.stringify(record) === JSON.stringify(newVisit)) {
 				sitePathAlreadyTraversed = true;
 			}
 		});
 
 		if (!arrayContainsOppositeDirection && !sitePathAlreadyTraversed) {
-	  		allTrees[tabId].push(newVisit);
+	  		currentTabTree.push(newVisit);
 		}
 
 	  	previousUrls[tabId] = changeInfo.url;
 
-	    chrome.storage.sync.set({'allTrees': allTrees, 'previousUrls': previousUrls}, function() {
+	    chrome.storage.sync.set({[activeWindow * tabId]: currentTabTree, 'previousUrls': previousUrls}, function() {
 	          // Notify that we saved.
 	          console.log('changes saved');
 	    });
@@ -42,10 +46,11 @@ function addVisitToTree(tabId, changeInfo) {
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
   if (changeInfo.url) {
-  	if (!allTrees || !previousUrls) {
-  		chrome.storage.sync.get({'allTrees': [],'previousUrls': []}, function (storage) {
-    		previousUrls = storage.previousUrls || [];
-    		allTrees = storage.allTrees || [];
+  	if (!currentTabTree || !previousUrls || activeTab !== tabId) {
+  		chrome.storage.sync.get({[activeWindow * tabId]: [],'previousUrls': {}}, function (storage) {
+    		previousUrls = storage.previousUrls || {};
+    		currentTabTree = storage[activeWindow * tabId] || [];
+    		activeTab = tabId;
     		addVisitToTree(tabId, changeInfo);
     	});
   	} else {
@@ -58,17 +63,22 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
 function onMessageListener_ (message, sender, sendResponse) {
 	if (message.type === 'getJSON') {
-		if (!allTrees) {
-			chrome.storage.sync.get('allTrees', function (obj) {
-			    allTrees = obj || [];
-			    sendResponse({result:allTrees[activeTab]});
+		if (!currentTabTree) {
+			chrome.storage.sync.get({[activeWindow * activeTab]: []}, function (obj) {
+			    currentTabTree = obj || [];
+			    sendResponse({result:currentTabTree});
 			});
 		} else {
-			sendResponse({result:allTrees[activeTab]});
+			console.log(JSON.stringify({'result':currentTabTree}));
+			sendResponse({'result':currentTabTree});
 		} 
 	} else 
 		sendResponse({});
 }
+
+chrome.windows.onFocusChanged.addListener(function (windowId) {
+	activeWindow = windowId;
+});
 
 chrome.runtime.onMessage.addListener(onMessageListener_);
 
