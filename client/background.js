@@ -15,7 +15,7 @@ chrome.tabs.onActiveChanged.addListener(function (tabId, selectInfo) {
 
 function addVisitToTree(tabId, changeInfo) {
 	if (currentTabTree && previousUrls) {
-		var lastUrlVisitedOnThisTab = previousUrls[tabId] || "null";
+		var lastUrlVisitedOnThisTab = previousUrls["p" + tabId.toString()] || "null";
 
 		var newVisit = {"name" : changeInfo.url, "parent": lastUrlVisitedOnThisTab};
 		var oppositeDirection = {"name" : lastUrlVisitedOnThisTab, "parent": changeInfo.url};
@@ -34,7 +34,7 @@ function addVisitToTree(tabId, changeInfo) {
 	  		currentTabTree.push(newVisit);
 		}
 
-	  	previousUrls[tabId] = changeInfo.url;
+	  	previousUrls["p" + tabId.toString()] = changeInfo.url;
 
 	    chrome.storage.sync.set({[activeWindow * tabId]: currentTabTree, 'previousUrls': previousUrls}, function() {
 	          // Notify that we saved.
