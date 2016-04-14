@@ -1,3 +1,4 @@
+from pygments.lexer import words
 
 from rec_app.models import Website, Category
 import SiteText
@@ -12,6 +13,14 @@ from nltk import *
 #         features[w] = (w in words)
 #
 #     return features
+
+def find_features(document,word_features):
+    words = set(document)
+    features = {}
+    for w in word_features:
+        features[w] = (w in words)
+
+    return features
 
 def train():
 
@@ -34,24 +43,33 @@ def train():
     for c in categories:
         dictionary[c.name]=[]
 
-    print dictionary
 
     websites = Website.objects.all()
 
-
+    all_words = []
     for web in websites:
-        all_words = word_tokenize(web.body)
-        all_words = nltk.FreqDist(all_words)
-        word_features = list(all_words.keys())[:1]
+        all_words.extend(word_tokenize(web.body))
 
-        for c in web.categories.all():
-            dictionary[c.name]=list(set(word_features).union(dictionary[c.name]))
+    all_words = nltk.FreqDist(all_words)
+    word_features = list(all_words.keys())[:3000]
+    featuresets = [(find_features(web.body,word_features), web.categories) for web in websites]
+
+    index = int(len(word_features)*0.80)
+    print "index taken:"
+    print index
+    training_set = featuresets[:index]
+    testing_set =featuresets[index:]
+
+    classifier = nltk.NaiveBayesClassifier.train(training_set)
+    classifier.show_most_informative_features(15)
 
 
 
 
-    print
-    print dictionary['recreation']
+
+
+
+
 
 
 
