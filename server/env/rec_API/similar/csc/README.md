@@ -1,0 +1,1 @@
+A small project to search for sites similar to a given site and create a database containing the information.
