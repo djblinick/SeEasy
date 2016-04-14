@@ -5,9 +5,8 @@ var margin = {top: 30, right: 20, bottom: 30, left: 20},
     barWidth = width * .8;
 
 var i = 0,
-    duration = 400,
-    root;
-
+    duration = 400;
+    
 var tree = d3.layout.tree()
     .nodeSize([0, 20]);
 
@@ -23,7 +22,7 @@ var svg = d3.select("body").append("svg")
 function update(source) {
 
   // Compute the flattened node list. TODO use d3.layout.hierarchy.
-  var nodes = tree.nodes(root);
+  var nodes = tree.nodes(source);
 
   var height = Math.max(500, nodes.length * barHeight + margin.top + margin.bottom);
 

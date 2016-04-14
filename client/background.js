@@ -4,6 +4,7 @@ var activeTab = 0;
 var previousUrls;
 var currentTabTree;
 var activeWindow;
+var dontAddTheseUrl = ["chrome://newtab/","http://localhost:8080/"];
 
 chrome.tabs.onActiveChanged.addListener(function (tabId, selectInfo) {
 	chrome.storage.sync.get({[activeWindow * tabId]: [],'previousUrls': {}}, function (storage) {
@@ -12,6 +13,10 @@ chrome.tabs.onActiveChanged.addListener(function (tabId, selectInfo) {
 		activeTab = tabId;
 	});
 });
+
+function checkShouldAddUrl(url){
+	return (dontAddTheseUrl.indexOf(url) == -1) ? true : false;
+}
 
 function addVisitToTree(tabId, changeInfo) {
 	if (currentTabTree && previousUrls) {
@@ -45,7 +50,7 @@ function addVisitToTree(tabId, changeInfo) {
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
-  if (changeInfo.url) {
+  if (changeInfo.url && checkShouldAddUrl(changeInfo.url)) {
   	if (!currentTabTree || !previousUrls || activeTab !== tabId) {
   		chrome.storage.sync.get({[activeWindow * tabId]: [],'previousUrls': {}}, function (storage) {
     		previousUrls = storage.previousUrls || {};
