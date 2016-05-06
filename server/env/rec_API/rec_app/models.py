@@ -6,6 +6,7 @@ STANDARD_LENGTH = 20
 class Website(models.Model):
     url = models.URLField()
     body = models.TextField()
+    view_count = models.IntegerField(default=0, blank=True)
     average_view_time = models.IntegerField(default=0, blank=True)
     categories = models.ManyToManyField('Category', blank=True)
     users_visited = models.ManyToManyField('Profile', blank=True)
