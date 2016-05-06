@@ -6,11 +6,15 @@ var currentTabTree;
 var activeWindow;
 var dontAddTheseUrl = ["chrome://newtab/","http://localhost:8080/"];
 
-chrome.tabs.onActiveChanged.addListener(function (tabId, selectInfo) {
-	chrome.storage.sync.get({[activeWindow * tabId]: [],'previousUrls': {}}, function (storage) {
+chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
+	chrome.storage.sync.remove([String(activeWindow * tabId)], function(storage) {});
+});
+
+chrome.tabs.onActivated.addListener(function (activeInfo) {
+	chrome.storage.sync.get({[String(activeWindow * activeInfo.tabId)]: [],'previousUrls': {}}, function (storage) {
 		previousUrls = storage.previousUrls || {};
-		currentTabTree = storage[activeWindow * tabId] || [];
-		activeTab = tabId;
+		currentTabTree = storage[String(activeWindow * activeInfo.tabId)] || [];
+		activeTab = activeInfo.tabId;
 	});
 });
 
@@ -41,7 +45,7 @@ function addVisitToTree(tabId, changeInfo) {
 
 	  	previousUrls["p" + tabId.toString()] = changeInfo.url;
 
-	    chrome.storage.sync.set({[activeWindow * tabId]: currentTabTree, 'previousUrls': previousUrls}, function() {
+	    chrome.storage.sync.set({[String(activeWindow * tabId)]: currentTabTree, 'previousUrls': previousUrls}, function() {
 	          // Notify that we saved.
 	          console.log('changes saved');
 	    });
@@ -52,9 +56,9 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
   if (changeInfo.url && checkShouldAddUrl(changeInfo.url)) {
   	if (!currentTabTree || !previousUrls || activeTab !== tabId) {
-  		chrome.storage.sync.get({[activeWindow * tabId]: [],'previousUrls': {}}, function (storage) {
+  		chrome.storage.sync.get({[String(activeWindow * tabId)]: [],'previousUrls': {}}, function (storage) {
     		previousUrls = storage.previousUrls || {};
-    		currentTabTree = storage[activeWindow * tabId] || [];
+    		currentTabTree = storage[String(activeWindow * tabId)] || [];
     		activeTab = tabId;
     		addVisitToTree(tabId, changeInfo);
     	});
