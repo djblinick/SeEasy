@@ -1,9 +1,12 @@
 #!/usr/bin/python
-
+import requests
 import sqlite3
 
 def get_category(url):
-    return "BLA"
+    response1 = requests.post(
+        'http://uclassify.com/browse/uClassify/Topics/ClassifyUrl?readkey=PjwkZVJnxWHi&url=' + 'www.url.com')
+    print response1.content
+    return response1.content
 
 
 conn = sqlite3.connect('db.sqlite3')
@@ -25,5 +28,4 @@ for row in cursor:
 
 
 conn.commit()
-print "Records created successfully";
 conn.close()
