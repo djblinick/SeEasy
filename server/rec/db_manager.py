@@ -1,11 +1,14 @@
 #!/usr/bin/python
 import requests
 import sqlite3
+import xml.etree.ElementTree as ET
 
 def get_category(url):
     response1 = requests.post(
         'http://uclassify.com/browse/uClassify/Topics/ClassifyUrl?readkey=PjwkZVJnxWHi&url=' + 'www.url.com')
     print response1.content
+    root = ET.fromstring(response1.content)
+    print root
     return response1.content
 
 
@@ -23,7 +26,6 @@ print names
 for row in cursor:
     print row
     print row[4]
-    update_command = "UPDATE get_url_website SET (category) VALUES ("+get_category(row[4])+") WHERE url="+str(row[4])
     conn.execute("""UPDATE get_url_website SET category = ? WHERE url= ? """, (get_category(row[4]),row[4]))
 
 
