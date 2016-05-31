@@ -10,6 +10,8 @@ import logging
 
 import random
 
+from django.views.decorators.csrf import csrf_exempt
+
 logger = logging.getLogger('django')
 
 
@@ -18,13 +20,14 @@ def index(request):
     logger.debug('index')
     return HttpResponse("SeEasy Django Index")
 
-
+@csrf_exempt
 def api(request, url):
     logger.debug('***** url: ' + str(url))
     method = 'blank'
     json_data = 'null'
     if request.method == 'POST':
         method = 'post'
+        logger.debug('******* post *****')
         post_to_database(url)
     elif request.method == 'GET':
         json_data = get_recommented_urls(url)
@@ -45,13 +48,12 @@ def get_recommented_urls(url):
 
 
 def post_to_database(url):
-    logger.debug('post')
-    url_entry = Website.objects.get(pk=url)
-    if url_entry == None:
+    try:
+        url_entry = Website.objects.get(pk=url)
         logger.debug('********* existing website: ' + str(url_entry) + 'increment view count')
         url_entry.view_count = url_entry.view_count + 1
         url_entry.save()
-    else:
+    except Website.DoesNotExist:
         w = Website(url=url, view_count=1)
         logger.debug('********* new website: ' + str(w) + 'added to database')
         w.save()
